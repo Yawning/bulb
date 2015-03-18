@@ -226,3 +226,5 @@ func NewConn(c io.ReadWriteCloser) *Conn {
 func newProtocolError(fmt string, args ...interface{}) textproto.ProtocolError {
 	return textproto.ProtocolError(gofmt.Sprintf(fmt, args...))
 }
+
+var _ io.ReadWriteCloser = (*Conn)(nil)
