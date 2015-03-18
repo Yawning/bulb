@@ -11,6 +11,7 @@ as I need them.
 
 Things you should probably use instead:
  * [stem](https://stem.torproject.org)
+ * [txtorcon](https://pypi.python.org/pypi/txtorcon)
  * [orc](https://github.com/sycamoreone/orc)
 
 Bugs:
