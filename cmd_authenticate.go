@@ -17,8 +17,10 @@ import (
 )
 
 // Authenticate authenticates with the Tor instance using the "best" possible
-// authentication method.
-func (c *Conn) Authenticate(passwd string) error {
+// authentication method.  The password argument is entirely optional, and will
+// only be used if the "SAFECOOKE" and "NULL" authentication methods are not
+// available and "HASHEDPASSWORD" is.
+func (c *Conn) Authenticate(password string) error {
 	if c.isAuthenticated {
 		return nil
 	}
@@ -123,11 +125,11 @@ func (c *Conn) Authenticate(passwd string) error {
 		// Despite the name HASHEDPASSWORD, the raw password is actually sent.
 		// According to the code, this can either be a QuotedString, or base16
 		// encoded, so go with the later since it's easier to handle.
-		if passwd == "" {
+		if password == "" {
 			return newProtocolError("password auth needs a password")
 		}
-		passwdStr := hex.EncodeToString([]byte(passwd))
-		_, err = c.Request("%s %s", cmdAuthenticate, passwdStr)
+		passwordStr := hex.EncodeToString([]byte(password))
+		_, err = c.Request("%s %s", cmdAuthenticate, passwordStr)
 		c.isAuthenticated = err == nil
 		return err
 	} else {
