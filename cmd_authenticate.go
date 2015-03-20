@@ -18,7 +18,7 @@ import (
 
 // Authenticate authenticates with the Tor instance using the "best" possible
 // authentication method.
-func (c *Conn) Authenticate() error {
+func (c *Conn) Authenticate(passwd string) error {
 	if c.isAuthenticated {
 		return nil
 	}
@@ -29,11 +29,12 @@ func (c *Conn) Authenticate() error {
 		return err
 	}
 
-	// TODO: Add support for password authentication.  "COOKIE" auth is
-	// superceded by "SAFECOOKIE" on all reasonable versions of Tor.
+	// "COOKIE" authentication exists, but anything modern supports
+	// "SAFECOOKIE".
 	const (
 		cmdAuthenticate      = "AUTHENTICATE"
 		authMethodNull       = "NULL"
+		authMethodPassword   = "HASHEDPASSWORD"
 		authMethodSafeCookie = "SAFECOOKIE"
 	)
 	if pi.AuthMethods[authMethodNull] {
@@ -116,6 +117,17 @@ func (c *Conn) Authenticate() error {
 		clientHashStr := hex.EncodeToString(clientHash)
 
 		_, err = c.Request("%s %s", cmdAuthenticate, clientHashStr)
+		c.isAuthenticated = err == nil
+		return err
+	} else if pi.AuthMethods[authMethodPassword] {
+		// Despite the name HASHEDPASSWORD, the raw password is actually sent.
+		// According to the code, this can either be a QuotedString, or base16
+		// encoded, so go with the later since it's easier to handle.
+		if passwd == "" {
+			return newProtocolError("password auth needs a password")
+		}
+		passwdStr := hex.EncodeToString([]byte(passwd))
+		_, err = c.Request("%s %s", cmdAuthenticate, passwdStr)
 		c.isAuthenticated = err == nil
 		return err
 	} else {

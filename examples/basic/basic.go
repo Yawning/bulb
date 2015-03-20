@@ -26,8 +26,9 @@ func main() {
 	// Do not enable in production.
 	c.Debug(true)
 
-	// Authenticate with the control port.
-	if err := c.Authenticate(); err != nil {
+	// Authenticate with the control port.  The password argument
+	// here can be "" if no password is set (CookieAuth, no auth).
+	if err := c.Authenticate("ExamplePassword"); err != nil {
 		log.Fatalf("Authentication failed: %v", err)
 	}
 
