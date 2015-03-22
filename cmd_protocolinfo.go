@@ -23,6 +23,13 @@ type ProtocolInfo struct {
 
 // ProtocolInfo issues a PROTOCOLINFO command and returns the parsed response.
 func (c *Conn) ProtocolInfo() (*ProtocolInfo, error) {
+	// In the pre-authentication state, only one PROTOCOLINFO command
+	// may be issued.  Cache the value returned so that subsequent
+	// calls continue to work.
+	if !c.isAuthenticated && c.cachedPI != nil {
+		return c.cachedPI, nil
+	}
+
 	resp, err := c.Request("PROTOCOLINFO")
 	if err != nil {
 		return nil, err
@@ -78,6 +85,9 @@ func (c *Conn) ProtocolInfo() (*ProtocolInfo, error) {
 			pi.TorVersion, _ = strconv.Unquote(torVersion)
 		default: // MUST ignore unsupported InfoLines.
 		}
+	}
+	if !c.isAuthenticated {
+		c.cachedPI = pi
 	}
 	return pi, nil
 }

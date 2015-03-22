@@ -132,7 +132,6 @@ func (c *Conn) Authenticate(password string) error {
 		_, err = c.Request("%s %s", cmdAuthenticate, passwordStr)
 		c.isAuthenticated = err == nil
 		return err
-	} else {
-		return newProtocolError("no supported authentication methods")
 	}
+	return newProtocolError("no supported authentication methods")
 }

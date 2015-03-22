@@ -32,6 +32,7 @@ type Conn struct {
 	conn            *textproto.Conn
 	isAuthenticated bool
 	debugLog        bool
+	cachedPI        *ProtocolInfo
 
 	asyncReaderLock    sync.Mutex
 	asyncReaderRunning bool
