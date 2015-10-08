@@ -178,7 +178,7 @@ func (o *OnionListener) Accept() (net.Conn, error) {
 	var conn net.Conn
 	var err error
 
-	if o.onionInfo.OnionId == "" {
+	if o.onionInfo.OnionID == "" {
 		return nil, fmt.Errorf("OnionListener: onion service not initialized.\n")
 	}
 
@@ -191,7 +191,7 @@ func (o *OnionListener) Accept() (net.Conn, error) {
 }
 
 func (o *OnionListener) Close() error {
-	err := o.controller.DeleteOnion(o.onionInfo.OnionId)
+	err := o.controller.DeleteOnion(o.onionInfo.OnionID)
 	if err != nil {
 		return fmt.Errorf("OnionListener: DeleteHiddenService failure: %s\n", err)
 	}
@@ -201,6 +201,6 @@ func (o *OnionListener) Close() error {
 func (o *OnionListener) Addr() net.Addr {
 	return OnionAddr{
 		network: "tor",
-		address: fmt.Sprintf("%s.onion:%d", o.onionInfo.OnionId, o.options.OnionServicePort),
+		address: fmt.Sprintf("%s.onion:%d", o.onionInfo.OnionID, o.options.OnionServicePort),
 	}
 }

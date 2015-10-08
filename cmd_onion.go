@@ -14,7 +14,7 @@ import (
 
 // OnionInfo is the result of the AddOnion command.
 type OnionInfo struct {
-	OnionId string
+	OnionID string
 	KeyType string
 	Key     string
 
@@ -33,7 +33,6 @@ func (c *Conn) AddOnion(virtPort int, target, keyType, keyContent string, new bo
 		request += fmt.Sprintf("%s:%s", keyType, keyContent)
 	}
 	request += fmt.Sprintf(" Port=%d,%s\n", virtPort, target)
-	fmt.Printf("DEBUG request: %s\n", request)
 	response, err := c.Request(request)
 	if err != nil {
 		return nil, err
@@ -42,7 +41,7 @@ func (c *Conn) AddOnion(virtPort int, target, keyType, keyContent string, new bo
 	onionInfo.RawResponse = response
 	fields = strings.Split(fmt.Sprintf("%s", response.Data), "ServiceID=")
 	fields = strings.Split(fields[1], " ")
-	onionInfo.OnionId = fields[0]
+	onionInfo.OnionID = fields[0]
 
 	if new {
 		fields = strings.Split(fmt.Sprintf("%s", response.Data), "PrivateKey=")
@@ -55,8 +54,9 @@ func (c *Conn) AddOnion(virtPort int, target, keyType, keyContent string, new bo
 	return &onionInfo, nil
 }
 
-func (c *Conn) DeleteOnion(serviceId string) error {
-	var deleteCmd string = fmt.Sprintf("DEL_ONION %s\n", serviceId)
+// DeleteOnion issues a DEL_ONION command and returns the parsed response.
+func (c *Conn) DeleteOnion(serviceID string) error {
+	var deleteCmd string = fmt.Sprintf("DEL_ONION %s\n", serviceID)
 	_, err := c.Request(deleteCmd)
 	return err
 }
