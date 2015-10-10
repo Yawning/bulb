@@ -8,11 +8,14 @@
 package main
 
 import (
+	"crypto/rand"
+	"crypto/rsa"
 	"io"
 	"log"
 	"net/http"
 
 	"github.com/yawning/bulb"
+	"github.com/yawning/bulb/utils/pkcs1"
 )
 
 func onionServer(w http.ResponseWriter, req *http.Request) {
@@ -38,8 +41,21 @@ func main() {
 		log.Fatalf("Authentication failed: %v", err)
 	}
 
-	// Create an ephemeral port 80 Onion Service.
-	l, err := c.Listener(80, nil)
+	// Generate a private key and create a port 80 Onion Service.
+	//
+	// For one-shot services:` l, err := c.Listener(80, nil)` is considerably
+	// easier.
+	pk, err := rsa.GenerateKey(rand.Reader, 1024)
+	if err != nil {
+		log.Fatalf("Failed to generate RSA key")
+	}
+	id, err := pkcs1.OnionAddr(&pk.PublicKey)
+	if err != nil {
+		log.Fatalf("Failed to derive onion ID: %v", err)
+	}
+	log.Printf("Expected ID: %v", id)
+
+	l, err := c.Listener(80, pk)
 	if err != nil {
 		log.Fatalf("Failed to get Listener: %v", err)
 	}
