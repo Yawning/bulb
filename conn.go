@@ -182,7 +182,7 @@ func (c *Conn) Request(fmt string, args ...interface{}) (*Response, error) {
 		}
 	}
 	if resp == nil {
-		panic("BUG: SendRawRequest() returned a nil response and error")
+		panic("BUG: Request() returned a nil response and error")
 	}
 	if resp.IsOk() {
 		return resp, nil
