@@ -14,8 +14,8 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/yawning/bulb"
-	"github.com/yawning/bulb/utils/pkcs1"
+	"github.com/Yawning/bulb"
+	"github.com/Yawning/bulb/utils/pkcs1"
 )
 
 func onionServer(w http.ResponseWriter, req *http.Request) {

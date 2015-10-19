@@ -10,7 +10,7 @@ package main
 import (
 	"log"
 
-	"github.com/yawning/bulb"
+	"github.com/Yawning/bulb"
 )
 
 func main() {
