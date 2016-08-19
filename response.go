@@ -45,7 +45,10 @@ func (r *Response) IsAsync() bool {
 	return r.Err.Code == StatusAsyncEvent
 }
 
-func (c *Conn) readResponse() (*Response, error) {
+// ReadResponse returns the next response object. Calling this
+// simultaniously with Read, Request, or StartAsyncReader will lead to
+// undefined behavior
+func (c *Conn) ReadResponse() (*Response, error) {
 	var resp *Response
 	var statusCode int
 	for {
