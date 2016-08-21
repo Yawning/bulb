@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/textproto"
 	"strconv"
+	"strings"
 )
 
 // Response is a response to a control port command, or an asyncrhonous event.
@@ -27,6 +28,9 @@ type Response struct {
 	// data is "decoded" and presented as a single string (terminal ".CRLF"
 	// removed, all intervening CRs stripped).
 	Data []string
+
+	// RawLines is all of the lines of a response, without CRLFs.
+	RawLines []string
 }
 
 // IsOk returns true if the response status code indicates success or
@@ -45,7 +49,10 @@ func (r *Response) IsAsync() bool {
 	return r.Err.Code == StatusAsyncEvent
 }
 
-func (c *Conn) readResponse() (*Response, error) {
+// ReadResponse returns the next response object. Calling this
+// simultaniously with Read, Request, or StartAsyncReader will lead to
+// undefined behavior
+func (c *Conn) ReadResponse() (*Response, error) {
 	var resp *Response
 	var statusCode int
 	for {
@@ -74,11 +81,15 @@ func (c *Conn) readResponse() (*Response, error) {
 			// lines.
 			return nil, newProtocolError("status code changed: %03d != %03d", code, statusCode)
 		}
+		if resp.RawLines == nil {
+			resp.RawLines = make([]string, 0, 1)
+		}
 
 		if line[3] == ' ' {
 			// Final line in the response.
 			resp.Reply = line[4:]
 			resp.Err = statusCodeToError(statusCode, resp.Reply)
+			resp.RawLines = append(resp.RawLines, line)
 			return resp, nil
 		}
 
@@ -89,9 +100,11 @@ func (c *Conn) readResponse() (*Response, error) {
 		case '-':
 			// Continuation, keep reading.
 			resp.Data = append(resp.Data, line[4:])
+			resp.RawLines = append(resp.RawLines, line)
 		case '+':
 			// A "dot-encoded" payload follows.
 			resp.Data = append(resp.Data, line[4:])
+			resp.RawLines = append(resp.RawLines, line)
 			dotBody, err := c.conn.ReadDotBytes()
 			if err != nil {
 				return nil, err
@@ -100,6 +113,11 @@ func (c *Conn) readResponse() (*Response, error) {
 				log.Printf("S: [dot encoded data]")
 			}
 			resp.Data = append(resp.Data, string(dotBody))
+			dotLines := strings.Split(string(dotBody), "\n")
+			for _, dotLine := range dotLines[:len(dotLines)-1] {
+				resp.RawLines = append(resp.RawLines, dotLine)
+			}
+			resp.RawLines = append(resp.RawLines, ".")
 		default:
 			return nil, newProtocolError("invalid separator: '%c'", line[3])
 		}

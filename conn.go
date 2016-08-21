@@ -66,7 +66,7 @@ func (c *Conn) isAsyncReaderRunning() bool {
 
 func (c *Conn) asyncReader() {
 	for {
-		resp, err := c.readResponse()
+		resp, err := c.ReadResponse()
 		if err != nil {
 			c.setRdErr(err, false)
 			break
@@ -107,7 +107,7 @@ func (c *Conn) Close() error {
 
 // StartAsyncReader starts the asynchronous reader go routine that allows
 // asynchronous events to be handled.  It must not be called simultaniously
-// with Request or undefined behavior will occur.
+// with Read, Request, or ReadResponse or undefined behavior will occur.
 func (c *Conn) StartAsyncReader() {
 	c.asyncReaderLock.Lock()
 	defer c.asyncReaderLock.Unlock()
@@ -145,8 +145,9 @@ func (c *Conn) NextEvent() (*Response, error) {
 
 // Request sends a raw control port request and returns the response.
 // If the async. reader is not currently running, events received while waiting
-// for the response will be silently dropped.  Calling StartAsyncReader
-// simultaniously with Request will lead to undefined behavior.
+// for the response will be silently dropped.  Calling Request simultaniously
+// with StartAsyncReader, Read, Write, or ReadResponse will lead to undefined
+// behavior.
 func (c *Conn) Request(fmt string, args ...interface{}) (*Response, error) {
 	if err := c.getRdErr(); err != nil {
 		return nil, err
@@ -175,7 +176,7 @@ func (c *Conn) Request(fmt string, args ...interface{}) (*Response, error) {
 		// Event handing requires the asyncReader() goroutine, try to get a
 		// response, while silently swallowing events.
 		for resp == nil || resp.IsAsync() {
-			resp, err = c.readResponse()
+			resp, err = c.ReadResponse()
 			if err != nil {
 				return nil, err
 			}
@@ -191,7 +192,8 @@ func (c *Conn) Request(fmt string, args ...interface{}) (*Response, error) {
 }
 
 // Read reads directly from the control port connection.  Mixing this call
-// with Request, or asynchronous events will lead to undefined behavior.
+// with Request, ReadResponse, or asynchronous events will lead to undefined
+// behavior.
 func (c *Conn) Read(p []byte) (int, error) {
 	return c.conn.R.Read(p)
 }
