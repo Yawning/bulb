@@ -15,6 +15,24 @@ import (
 	"strconv"
 )
 
+// SplitQuoted splits s by sep if it is found outside substring
+// quoted by quote.
+func SplitQuoted(s string, quote, sep rune) (splitted []string) {
+        quoteFlag := false
+NewSubstring:
+        for i, c := range s {
+                if c == quote {
+                        quoteFlag = !quoteFlag
+                }
+                if c == sep && !quoteFlag {
+                        splitted = append(splitted, s[:i])
+                        s = s[i+1:]
+                        goto NewSubstring
+                }
+        }
+        return append(splitted, s)
+}
+
 // ParseControlPortString parses a string representation of a control port
 // address into a network/address string pair suitable for use with "dial".
 //
