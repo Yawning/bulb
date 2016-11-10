@@ -78,9 +78,9 @@ func (c *Conn) AddOnion(ports []OnionPortSpec, key crypto.PrivateKey, oneshot bo
 
 	var resp *Response
 	if hsKeyStr == "" {
-		flags := " Flags=DiscardPK"
-		if !oneshot {
-			flags = ""
+		flags := ""
+		if oneshot {
+			flags = " Flags=DiscardPK"
 		}
 		resp, err = c.Request("ADD_ONION NEW:BEST%s%s", portStr, flags)
 	} else {
