@@ -55,7 +55,11 @@ func main() {
 	}
 	log.Printf("Expected ID: %v", id)
 
-	l, err := c.Listener(80, pk)
+	cfg := &bulb.NewOnionConfig{
+		DiscardPK: true,
+		PrivateKey: pk,
+	}
+	l, err := c.NewListener(cfg, 80)
 	if err != nil {
 		log.Fatalf("Failed to get Listener: %v", err)
 	}
