@@ -16,6 +16,8 @@ import (
 	"net"
 	"net/textproto"
 	"sync"
+
+	bulbUtils "github.com/yawning/bulb/utils"
 )
 
 const (
@@ -217,6 +219,33 @@ func Dial(network, addr string) (*Conn, error) {
 		return nil, err
 	}
 	return NewConn(c), nil
+}
+
+const(
+	torControlPort = "9051"
+	tbbControlPort = "9151"
+)
+
+// DialURL connects to a given control string (URL) and returns a new Conn for the
+// connection. If control string is "default://" DialURL tries to connect to the
+// system-wide tor daemon and if not succedes tries to connect to tor from
+// TorBrowser Bundle.
+func DialURL(URL string) (c *Conn, err error) {
+	if URL == "default://" {
+		for _, u := range []string{torControlPort, tbbControlPort} {
+			c, err = DialURL(u)
+			if err == nil {
+				return c, nil
+			}
+		}
+		return nil, err
+	}
+	// It is a non-default control string
+	network, addr, err := bulbUtils.ParseControlPortString(URL)
+	if err != nil {
+		return nil, err
+	}
+	return Dial(network, addr)
 }
 
 // NewConn returns a new Conn using c for I/O.
