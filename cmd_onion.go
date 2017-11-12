@@ -39,16 +39,18 @@ type OnionPortSpec struct {
 
 // NewOnionConfig is a configuration for NewOnion command.
 type NewOnionConfig struct {
-	PortSpecs    []OnionPortSpec
-	PrivateKey   crypto.PrivateKey
-	DiscardPK    bool
-	Detach       bool
-	BasicAuth    bool
-	NonAnonymous bool
+	PortSpecs      []OnionPortSpec
+	PrivateKey     crypto.PrivateKey
+	DiscardPK      bool
+	Detach         bool
+	BasicAuth      bool
+	NonAnonymous   bool
+	AwaitForUpload bool
 }
 
 // NewOnion issues an ADD_ONION command using configuration config and
 // returns the parsed response.
+// NewOnion will block until first descriptor upload if config.AwaitForUpload is set.
 func (c *Conn) NewOnion(config *NewOnionConfig) (*OnionInfo, error) {
 	const keyTypeRSA = "RSA1024"
 	var err error
@@ -163,6 +165,25 @@ func (c *Conn) NewOnion(config *NewOnionConfig) (*OnionInfo, error) {
 	oi.RawResponse = resp
 	oi.OnionID = serviceID
 	oi.PrivateKey = hsPrivateKey
+
+	if config.AwaitForUpload {
+		// Wait for service descriptor upload
+		c.StartAsyncReader()
+		if _, err := c.Request("SETEVENTS HS_DESC"); err != nil {
+			return nil, fmt.Errorf("SETEVENTS HS_DESC has failed: %v", err)
+		}
+		eventPrefix := fmt.Sprintf("HS_DESC UPLOADED %s", oi.OnionID)
+
+		for {
+			ev, err := c.NextEvent()
+			if err != nil {
+				return nil, fmt.Errorf("NextEvent has failed: %v", err)
+			}
+			if strings.HasPrefix(ev.Reply, eventPrefix) {
+				break
+			}
+		}
+	}
 
 	return oi, nil
 }

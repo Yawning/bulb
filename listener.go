@@ -55,6 +55,7 @@ func (l *onionListener) Addr() net.Addr {
 // All of virtual ports specified in vports will be mapped to the port to which
 // the underlying TCP listener binded. PortSpecs in config will be ignored since
 // there is only one mapping for a vports set is possible.
+// NewListener will block until first descriptor upload if config.AwaitForUpload is set.
 func (c *Conn) NewListener(config *NewOnionConfig, vports ...uint16) (net.Listener, error) {
 	var cfg NewOnionConfig
 	if config == nil {
@@ -96,7 +97,6 @@ func (c *Conn) NewListener(config *NewOnionConfig, vports ...uint16) (net.Listen
 		tcpListener.Close()
 		return nil, err
 	}
-
 	oa := &onionAddr{info: oi, port: vports[0]}
 	ol := &onionListener{addr: oa, ctrlConn: c, listener: tcpListener}
 
